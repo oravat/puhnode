@@ -20,7 +20,7 @@ console.log('start')
 morgan.token('namet', function (req, res) { return JSON.stringify(req.body)})
 
 app.use(morgan(function (tokens, req, res) {
-    if(tokens.method(req, res) === POST){
+    if(tokens.method(req, res) === 'POST'){
         return [
             tokens.method(req, res),
             tokens.url(req, res),
