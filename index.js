@@ -55,6 +55,7 @@ app.get('/api/persons', (request, response) => {
 
 app.get('/api/persons/:id', (request, response) => {
     const id = request.params.id
+    console.log(id)
     const person = persons.find(p => p.id === id)
     if (person) {
         response.json(person)
@@ -98,6 +99,21 @@ app.post('/api/persons', (request, response) => {
     return response.json(person)
 })
 
+app.put('/api/persons/:id', (request, response) => {
+    const id = Number(request.params.id)
+    const body = request.body
+    const newNumber = body.number
+    if(persons.find(p => p.id === id)) {
+        const person = persons.find(p => p.id === id)
+        person.number = newNumber
+        return response.json(person)
+    }
+    else{
+        return response.status(400).json({ 
+            error: 'no such person' 
+        })
+    } 
+})
 
 
 const PORT = process.env.PORT || 3001
