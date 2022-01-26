@@ -10,10 +10,8 @@ const Person = require('./models/person')
 
 app.use(cors())
 app.use(express.static('build'))
-
-let persons = []
-
 app.use(express.json())
+
 console.log('start')
 morgan.token('namet', function (req, res) { return JSON.stringify(req.body)})
 
@@ -43,7 +41,7 @@ app.get('/', (request, response) => {
 })
   
 app.get('/info', (request, response) => {
-    response.send('Phonebook has info for ' + persons.length + ' people' + '<br/> ' + Date())
+    response.send('Phonebook has info for ' + Person.count() + ' people' + '<br/> ' + Date())
 })
 
 app.get('/api/persons', (request, response) => {
@@ -53,23 +51,30 @@ app.get('/api/persons', (request, response) => {
 })
   
 
-app.get('/api/persons/:id', (request, response) => {
-    const id = request.params.id
-    console.log(id)
-    const person = persons.find(p => p.id === id)
-    if (person) {
-        response.json(person)
-    } else {
-        response.status(404).json({
-            error: 'person not found'
-        }) 
-    }   
-})
+app.get('/api/persons/:id', (request, response, next) => {
+    Person.findById(request.params.id).then(person => {
+        if (person) {
+            response.json(person)
+        } else {
+            console.log("no such person")
+            response.status(404).end()
+        }
+    })
+    .catch(error => next(error))
+})    
 
-app.delete('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    persons = persons.filter(person => person.id !== id)
-    response.status(204).end()
+app.delete('/api/persons/:id', (request, response, next) => {
+    console.log('trying to delet')
+    Person.findByIdAndRemove(request.params.id).then(person => {
+        if (person) {
+            console.log("person deleted")
+            response.status(204).end()
+        } else {
+            response.status(404).end()
+            console.log("person doesnt exist")
+        }
+    })
+    .catch(error => next(error))
 })
 
 app.post('/api/persons', (request, response) => {
@@ -90,31 +95,62 @@ app.post('/api/persons', (request, response) => {
         })
     }
 
-    const person = {
+    const person = new Person({
         name: body.name,
         number: body.number,
         id: Math.floor(Math.random() * 10000000 + 5),
-    }
-    persons = persons.concat(person)
-    return response.json(person)
+    })
+    person.save().then(savedPerson => {
+        response.json(savedPerson)
+    })
 })
 
-app.put('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
+app.put('/api/persons/:id', (request, response, next) => {
     const body = request.body
-    const newNumber = body.number
-    if(persons.find(p => p.id === id)) {
-        const person = persons.find(p => p.id === id)
-        person.number = newNumber
-        return response.json(person)
+
+    const person = {
+        name : body.name,   
+        number : body.number,
     }
-    else{
-        return response.status(400).json({ 
-            error: 'no such person' 
-        })
-    } 
+
+    Person.findByIdAndUpdate(request.params.id, person, { new: true }).then(person => {
+        if (person) {
+            response.json(person)
+        } else {
+            response.status(404).end()
+            console.log("no such person")
+        }
+    })
+    .catch(error => next(error))
 })
 
+const unknownEndpoint = (request, response) => {
+    response.status(404).send({ error: 'unknown endpoint' })
+}
+
+// olemattomien osoitteiden käsittely
+app.use(unknownEndpoint)
+
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+
+    if (error.name === 'CastError') {
+      return response.status(400).send({ error: 'malformatted id' })
+    }
+
+    if (error.name === 'NodeError') {
+        return response.status(400).send({ error: 'mysterious error' })
+    }
+
+    if (error.name === 'ReferenceError') {
+        return response.status(400).send({ error: 'error type doesnt exist' })
+    }
+  
+    next(error)  
+}
+  
+// virheellisten pyyntöjen käsittely
+app.use(errorHandler)
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
