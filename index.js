@@ -7,6 +7,7 @@ const morgan = require('morgan')
 const app = express()
 const cors = require('cors')
 const Person = require('./models/person')
+const { json } = require('express/lib/response')
 
 app.use(cors())
 app.use(express.static('build'))
@@ -41,7 +42,9 @@ app.get('/', (request, response) => {
 })
   
 app.get('/info', (request, response) => {
-    response.send('Phonebook has info for ' + Person.count() + ' people' + '<br/> ' + Date())
+    Person.countDocuments({}).then(count => {
+        response.send('Phonebook has info for ' + count + ' people' + '<br/> ' + Date())
+    })
 })
 
 app.get('/api/persons', (request, response) => {
@@ -56,7 +59,6 @@ app.get('/api/persons/:id', (request, response, next) => {
         if (person) {
             response.json(person)
         } else {
-            console.log("no such person")
             response.status(404).end()
         }
     })
@@ -64,20 +66,17 @@ app.get('/api/persons/:id', (request, response, next) => {
 })    
 
 app.delete('/api/persons/:id', (request, response, next) => {
-    console.log('trying to delet')
     Person.findByIdAndRemove(request.params.id).then(person => {
         if (person) {
-            console.log("person deleted")
             response.status(204).end()
         } else {
             response.status(404).end()
-            console.log("person doesnt exist")
         }
     })
     .catch(error => next(error))
 })
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
     const body = request.body
     if (!body.name) {
         return response.status(400).json({ 
@@ -103,6 +102,7 @@ app.post('/api/persons', (request, response) => {
     person.save().then(savedPerson => {
         response.json(savedPerson)
     })
+    .catch(error => next(error))
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
@@ -118,7 +118,6 @@ app.put('/api/persons/:id', (request, response, next) => {
             response.json(person)
         } else {
             response.status(404).end()
-            console.log("no such person")
         }
     })
     .catch(error => next(error))
@@ -128,7 +127,6 @@ const unknownEndpoint = (request, response) => {
     response.status(404).send({ error: 'unknown endpoint' })
 }
 
-// olemattomien osoitteiden käsittely
 app.use(unknownEndpoint)
 
 const errorHandler = (error, request, response, next) => {
@@ -149,7 +147,6 @@ const errorHandler = (error, request, response, next) => {
     next(error)  
 }
   
-// virheellisten pyyntöjen käsittely
 app.use(errorHandler)
 
 const PORT = process.env.PORT
