@@ -76,6 +76,7 @@ app.delete('/api/persons/:id', (request, response, next) => {
     .catch(error => next(error))
 })
 
+
 app.post('/api/persons', (request, response, next) => {
     const body = request.body
     if (!body.name) {
@@ -88,19 +89,23 @@ app.post('/api/persons', (request, response, next) => {
           error: 'number missing' 
         })
     }
-    if (persons.find(p => p.name.toLowerCase() === body.name.toLowerCase())){
-        return response.status(400).json({ 
-            error: 'person already exists' 
-        })
-    }
-
-    const person = new Person({
-        name: body.name,
-        number: body.number,
-        id: Math.floor(Math.random() * 10000000 + 5),
-    })
-    person.save().then(savedPerson => {
-        response.json(savedPerson)
+    
+    Person.exists({ name: {$regex: body.name, $options: 'i'}}).then(result => {
+        if(result){
+            return response.status(400).json({ 
+                error: 'person already exists' 
+            })
+        }
+        else{
+            const person = new Person({
+                name: body.name,
+                number: body.number,
+                id: Math.floor(Math.random() * 10000000 + 5),
+            })
+            person.save().then(savedPerson => {
+                response.json(savedPerson)
+            })
+        }
     })
     .catch(error => next(error))
 })
