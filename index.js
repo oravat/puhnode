@@ -8,8 +8,8 @@ const app = express()
 const cors = require('cors')
 const Person = require('./models/person')
 const { json } = require('express/lib/response')
+const { captureRejections } = require('events')
 
-app.use(cors())
 app.use(express.static('build'))
 app.use(express.json())
 
@@ -105,9 +105,10 @@ app.post('/api/persons', (request, response, next) => {
             person.save().then(savedPerson => {
                 response.json(savedPerson)
             })
+            .catch(error => next(error))
         }
     })
-    .catch(error => next(error))
+
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
@@ -138,7 +139,7 @@ const errorHandler = (error, request, response, next) => {
     console.error(error.message)
 
     if (error.name === 'CastError') {
-      return response.status(400).send({ error: 'malformatted id' })
+        return response.status(400).send({ error: 'malformatted id' })
     }
 
     if (error.name === 'NodeError') {
@@ -148,7 +149,11 @@ const errorHandler = (error, request, response, next) => {
     if (error.name === 'ReferenceError') {
         return response.status(400).send({ error: 'error type doesnt exist' })
     }
-  
+
+    if (error.name === 'ValidationError') {
+        return response.status(400)
+    }
+      
     next(error)  
 }
   
