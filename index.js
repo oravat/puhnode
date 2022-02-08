@@ -100,10 +100,10 @@ app.post('/api/persons', (request, response, next) => {
             const person = new Person({
                 name: body.name,
                 number: body.number,
-                id: Math.floor(Math.random() * 10000000 + 5),
             })
             person.save().then(savedPerson => {
                 response.json(savedPerson)
+
             })
             .catch(error => next(error))
         }
@@ -116,12 +116,15 @@ app.put('/api/persons/:id', (request, response, next) => {
 
     const person = {
         name : body.name,   
-        number : body.number,
+        number : body.number
     }
 
     Person.findByIdAndUpdate(request.params.id, person, { new: true }).then(person => {
         if (person) {
-            response.json(person)
+            person.save().then(savedPerson => {
+                response.json(savedPerson)
+            })
+            .catch(error => next(error))    
         } else {
             response.status(404).end()
         }
@@ -151,9 +154,12 @@ const errorHandler = (error, request, response, next) => {
     }
 
     if (error.name === 'ValidationError') {
-        return response.status(400)
+        return response.status(400).send({ error: 'validation error!'})
     }
       
+    if (error.name === 'ValidatorError') {
+        return response.status(400).send({ error: error.message })
+    }
     next(error)  
 }
   

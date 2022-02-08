@@ -2,8 +2,8 @@ POST http://localhost:3001/api/persons HTTP/1.1
 content-type: application/json
 
 {
-    "name": "Mattheusii",
-    "number": "20021"
+    "name": "mAn",
+    "number": "040-1235754"
 }
 
 ###
@@ -12,8 +12,8 @@ POST http://localhost:3001/api/persons HTTP/1.1
 content-type: application/json
 
 {
-    "name": "arto HeLlas",
-    "number": "2200"
+    "name": "Mehesantti",
+    "number": "040-1234"
 }
 
 ###
@@ -21,19 +21,18 @@ GET http://localhost:3001/api/persons
 
 ###
 
-GET http://localhost:3001/api/persons/61f0f63e726559cdfba7a400
+GET http://localhost:3001/api/persons/61f0f52cb307635fedfe516f
 ###
 
-DELETE http://localhost:3001/api/persons/61f0f63e726559cdfba7a483
-
+DELETE http://localhost:3001/api/persons/61fa4e348a1b44b19f7a09f7
 ###
 
-PUT http://localhost:3001/api/persons/61f0f79b331087d07a2dede8
+PUT http://localhost:3001/api/persons/61fa4e348a1b44b19f7a09f7
 content-type: application/json
 
 {
-    "number": "22111"
+    "number": "221121"
 }
 
 ###
-GET http://localhost:3001/api/info
+GET http://localhost:3001/info
