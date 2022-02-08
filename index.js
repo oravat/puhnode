@@ -93,14 +93,15 @@ app.post('/api/persons', (request, response, next) => {
     Person.exists({ name: {$regex: body.name, $options: 'i'}}).then(result => {
         if(result){
             return response.status(400).json({ 
-                error: 'person already exists' 
+                error: 'person already exists',
+                number: 'body.number' 
             })
         }
         else{
-            const person = new Person({
+            const person = {
                 name: body.name,
                 number: body.number,
-            })
+            }
             person.save().then(savedPerson => {
                 response.json(savedPerson)
 
@@ -165,7 +166,7 @@ const errorHandler = (error, request, response, next) => {
   
 app.use(errorHandler)
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
