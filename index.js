@@ -7,8 +7,6 @@ const morgan = require('morgan')
 const app = express()
 const cors = require('cors')
 const Person = require('./models/person')
-const { json } = require('express/lib/response')
-const { captureRejections } = require('events')
 
 app.use(express.static('build'))
 app.use(express.json())
@@ -90,18 +88,20 @@ app.post('/api/persons', (request, response, next) => {
         })
     }
     
-    Person.exists({ name: {$regex: body.name, $options: 'i'}}).then(result => {
-        if(result){
+    const re = new RegExp( body.name, "i")
+
+    Person.find({ name: {$eq: re}}).then(result => {
+        console.log("tulos on " + result + " nimellä " + body.name)
+        if(result){          
             return response.status(400).json({ 
-                error: 'person already exists',
-                number: 'body.number' 
+                error: 'name in use'
             })
         }
         else{
-            const person = {
+            const person = new Person ({
                 name: body.name,
                 number: body.number,
-            }
+            })
             person.save().then(savedPerson => {
                 response.json(savedPerson)
 
@@ -113,24 +113,20 @@ app.post('/api/persons', (request, response, next) => {
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
-    const body = request.body
 
-    const person = {
-        name : body.name,   
-        number : body.number
-    }
-
-    Person.findByIdAndUpdate(request.params.id, person, { new: true }).then(person => {
+    Person.findByIdAndUpdate(request.params.id, request.body, {runValidators: true}).then(person => {
         if (person) {
             person.save().then(savedPerson => {
                 response.json(savedPerson)
             })
-            .catch(error => next(error))    
+            .catch(error => next(error))
+  
         } else {
-            response.status(404).end()
+            response.status(404).end()    
         }
     })
-    .catch(error => next(error))
+        .catch(error => next(error))    
+
 })
 
 const unknownEndpoint = (request, response) => {
@@ -145,23 +141,11 @@ const errorHandler = (error, request, response, next) => {
     if (error.name === 'CastError') {
         return response.status(400).send({ error: 'malformatted id' })
     }
-
-    if (error.name === 'NodeError') {
-        return response.status(400).send({ error: 'mysterious error' })
-    }
-
-    if (error.name === 'ReferenceError') {
-        return response.status(400).send({ error: 'error type doesnt exist' })
-    }
-
     if (error.name === 'ValidationError') {
-        return response.status(400).send({ error: 'validation error!'})
-    }
-      
-    if (error.name === 'ValidatorError') {
         return response.status(400).send({ error: error.message })
     }
     next(error)  
+    return response.status(400).send({'new error' : error.message})
 }
   
 app.use(errorHandler)
