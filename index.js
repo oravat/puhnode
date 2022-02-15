@@ -90,9 +90,7 @@ app.delete('/api/all', (request, response, next) => {
 app.post('/api/persons', (request, response, next) => {
     const body = request.body
     if (!body.name) {
-        return response.status(400).json({ 
-          error: 'name missing' 
-        })
+        return null
     }
     if (!body.number) {
         return response.status(400).json({ 
@@ -125,7 +123,7 @@ app.post('/api/persons', (request, response, next) => {
 
 app.put('/api/persons/:id', (request, response, next) => {
 
-    Person.findByIdAndUpdate(request.params.id, request.body, {runValidators: true}).then(person => {
+    Person.findByIdAndUpdate(request.params.id, request.body, {runValidators: true, returnDocument: 'after'}).then(person => {
         if (person) {
             person.save().then(savedPerson => {
                 response.json(savedPerson)

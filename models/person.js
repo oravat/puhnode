@@ -27,8 +27,7 @@ const personSchema = new mongoose.Schema({
         message: 'Invalid number!'
       },
       required: true
-    },
-    id: Number,
+    }
 })
 
 
