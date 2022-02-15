@@ -7,6 +7,7 @@ const morgan = require('morgan')
 const app = express()
 const cors = require('cors')
 const Person = require('./models/person')
+const { brotliDecompressSync } = require('zlib')
 
 app.use(express.static('build'))
 app.use(express.json())
@@ -74,6 +75,17 @@ app.delete('/api/persons/:id', (request, response, next) => {
     .catch(error => next(error))
 })
 
+app.delete('/api/all', (request, response, next) => {
+    Person.deleteMany().then(person => {
+        if (person) {
+            console.log(response)
+            response.status(204).end()
+        } else {
+            response.status(404).end()
+        }
+    })
+    .catch(error => next(error))
+})
 
 app.post('/api/persons', (request, response, next) => {
     const body = request.body
@@ -90,9 +102,8 @@ app.post('/api/persons', (request, response, next) => {
     
     const re = new RegExp( body.name, "i")
 
-    Person.find({ name: {$eq: re}}).then(result => {
-        console.log("tulos on " + result + " nimellä " + body.name)
-        if(result){          
+    Person.find({ name: re }, function(err, result){
+        if(result.length !== 0){          
             return response.status(400).json({ 
                 error: 'name in use'
             })
