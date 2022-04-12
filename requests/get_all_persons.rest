@@ -2,7 +2,7 @@ POST http://localhost:3001/api/persons HTTP/1.1
 content-type: application/json
 
 {
-    "name": "Mehi",
+    "name": "Meaa",
     "number": "040-1235"
 }
 
@@ -12,8 +12,8 @@ POST http://localhost:3001/api/persons HTTP/1.1
 content-type: application/json
 
 {
-    "name": "me",
-    "number": "040-12345"
+    "name": "testing",
+    "number": "testing"
 }
 
 ###
@@ -24,7 +24,10 @@ GET http://localhost:3001/api/persons
 GET http://localhost:3001/api/persons/61f0f52cb307635fedfe516f
 ###
 
-DELETE http://localhost:3001/api/persons/62037a3fe9fbe9190d63d959
+DELETE http://localhost:3001/api/persons/620b61e894a1139efce77a95
+###
+
+DELETE http://localhost:3001/api/all
 ###
 
 PUT http://localhost:3001/api/persons/620362e9cf483a56ed04701f
